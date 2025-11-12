@@ -1,0 +1,640 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Чек-лист — Оценка культуры производства</title>
+<style>
+  :root{
+    --accent:#0f5ca8;
+    --muted:#666;
+    --bg:#f2f5fb;
+    --card:#fff;
+    --section-bg:#f8fafd;
+    --danger:#dc3545;
+    --success:#28a745;
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+  }
+  html,body{height:100%;margin:0;background:var(--bg);color:#111}
+  header{background:#fff;padding:12px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 0 rgba(16,24,40,.04)}
+  header a{color:var(--accent);text-decoration:none;font-weight:700}
+  .container{max-width:1200px;margin:12px auto;padding:12px}
+  .meta{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+  .meta .chip{background:#fff;border-radius:8px;padding:8px 10px;box-shadow:0 6px 14px rgba(20,30,60,.04);font-size:14px}
+  .form-card{background:var(--card);padding:8px;border-radius:10px;box-shadow:0 6px 18px rgba(20,30,60,.04)}
+  .section{background:var(--section-bg);padding:12px 16px;border-radius:8px;margin-bottom:16px;border-left:4px solid var(--accent)}
+  .section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+  .section h3{margin:0;font-size:16px;color:var(--accent);font-weight:600}
+  .section-score{background:var(--accent);color:white;padding:4px 12px;border-radius:12px;font-size:14px;font-weight:600}
+  .item{display:grid;grid-template-columns:1fr auto;gap:12px;padding:12px;background:white;border-radius:8px;margin-bottom:8px;border:1px solid #e3eefb}
+  .item-header{display:flex;gap:8px;align-items:flex-start;margin-bottom:8px}
+  .item-number{background:var(--accent);color:white;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0}
+  .item-text{flex:1;font-size:14px;line-height:1.4}
+  .controls{display:flex;gap:8px;align-items:center;margin-top:8px}
+  .toggle{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:6px;background:#f7f9fc;border:1px solid #e6eef9;cursor:pointer;font-weight:600;font-size:13px;transition:all 0.2s}
+  .toggle:hover{background:#e9f3ff}
+  .toggle.on.success{background:linear-gradient(90deg,#e8f5e8,#f0f9f0);border-color:#c3e6c3;color:var(--success)}
+  .toggle.on.danger{background:linear-gradient(90deg,#ffe8e8,#fff0f0);border-color:#f5c6cb;color:var(--danger)}
+  .comment{display:block;margin-top:8px;width:100%;padding:8px;border:1px solid #e3eefb;border-radius:6px;font-size:13px;resize:vertical;min-height:60px}
+  .photo-preview{margin-top:8px;display:flex;gap:8px;flex-wrap:wrap}
+  .photo-preview img{width:86px;height:64px;object-fit:cover;border-radius:6px;border:1px solid #ddd;cursor:pointer}
+  .photo-preview .photo-item{position:relative;display:inline-block}
+  .photo-preview .remove-photo{position:absolute;top:-8px;right:-8px;background:var(--danger);color:white;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer;border:none}
+  .submit-row{display:flex;gap:8px;padding:16px;margin-top:16px;align-items:center;justify-content:space-between;background:white;border-radius:8px}
+  .btn{background:var(--accent);color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;font-weight:700;border:none;cursor:pointer;font-size:14px}
+  .btn.ghost{background:#fff;color:var(--accent);border:1px solid #e3eefb}
+  .btn:disabled{background:#ccc;cursor:not-allowed}
+  .progress{height:8px;background:#e9f3ff;border-radius:8px;overflow:hidden}
+  .progress > i{display:block;height:8px;background:linear-gradient(90deg,#2b8bd6,#0f5ca8);width:0%;transition:width 0.3s}
+  .score-summary{display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:12px;margin:16px 0}
+  .score-card{background:white;padding:12px;border-radius:8px;text-align:center;border:1px solid #e3eefb}
+  .score-value{font-size:24px;font-weight:700;color:var(--accent)}
+  .score-label{font-size:12px;color:var(--muted);margin-top:4px}
+  .final-score{background:linear-gradient(135deg,#0f5ca8,#2b8bd6);color:white;padding:16px;border-radius:8px;text-align:center;margin:16px 0}
+  .final-score-value{font-size:32px;font-weight:700;margin:8px 0}
+  .required{color:var(--danger);font-size:12px;margin-top:4px}
+  .photo-modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:1000;align-items:center;justify-content:center}
+  .photo-modal img{max-width:90%;max-height:90%;border-radius:8px}
+  .photo-modal-close{position:absolute;top:20px;right:20px;color:white;font-size:24px;cursor:pointer}
+  .loading{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(255,255,255,0.8);z-index:2000;align-items:center;justify-content:center;flex-direction:column}
+  .loading-spinner{width:40px;height:40px;border:4px solid #f3f3f3;border-top:4px solid var(--accent);border-radius:50%;animation:spin 1s linear infinite}
+  @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<header>
+  <a href="index.html">← Назад</a>
+  <div style="flex:1"></div>
+  <a href="#" onclick="exportReport()">Экспорт</a>
+</header>
+
+<div class="container">
+  <div class="meta">
+    <div class="chip">Форма: Форма 1 — Оценка культуры производства</div>
+    <div class="chip">Участок: <span id="departmentName">Производственный участок</span></div>
+    <div class="chip">Дата: <strong id="dateNow"></strong></div>
+    <div class="chip">Проверяющий: <strong id="inspectorName">Иванов И.И.</strong></div>
+  </div>
+
+  <div class="score-summary" id="scoreSummary">
+    <!-- Баллы будут заполняться скриптом -->
+  </div>
+
+  <div class="form-card" id="formCard">
+    <!-- SECTION A -->
+    <div class="section" data-section-id="A">
+      <div class="section-header">
+        <h3>A. Состояние рабочего пространства укладчика-упаковщика</h3>
+        <div class="section-score">Баллы: <span id="scoreA">0</span></div>
+      </div>
+      
+      <!-- item A1 -->
+      <div class="item" data-item-id="A1" data-points="1">
+        <div class="text">
+          <div class="item-header">
+            <div class="item-number">1</div>
+            <div class="item-text">На полу отсутствует пыль, грязь. Под оборудованием и вокруг него отсутствует россыпи сырья и/или красителя, мусор, литники, продукция, пакеты из-под материала, другие предметы</div>
+          </div>
+          <div class="controls">
+            <button class="toggle success" onclick="toggleItem(this, 1)">✅ соответствует (1 балл)</button>
+            <button class="toggle danger" onclick="toggleItem(this, 0)">❌ не соответствует (0 баллов)</button>
+          </div>
+          <textarea class="comment" placeholder="Комментарий с указанием номера оборудования, где выявлено несоответствие"></textarea>
+          <div class="photo-preview"></div>
+          <div class="required">* При отметке "не соответствует" фото обязательно</div>
+        </div>
+        <div>
+          <label class="btn ghost" style="display:inline-block;cursor:pointer">
+            📷 Фото <input accept="image/*" onchange="attachPhoto(event,this)" style="display:none" type="file" />
+          </label>
+        </div>
+      </div>
+
+      <!-- item A2 -->
+      <div class="item" data-item-id="A2" data-points="1">
+        <div class="text">
+          <div class="item-header">
+            <div class="item-number">2</div>
+            <div class="item-text">Личные вещи отсутствуют в рабочей зоне работника (на оборудовании, стуле, стойке и т.д.), в том числе спецодежда. Работник при выполнении своих обязанностей применяет головной убор и перчатки согласно идентификационному фото на оборудовании. Волосы работника полностью убраны под головной убор.</div>
+          </div>
+          <div class="controls">
+            <button class="toggle success" onclick="toggleItem(this, 1)">✅ соответствует (1 балл)</button>
+            <button class="toggle danger" onclick="toggleItem(this, 0)">❌ не соответствует (0 баллов)</button>
+          </div>
+          <textarea class="comment" placeholder="Комментарий с указанием номера оборудования, где выявлено несоответствие"></textarea>
+          <div class="photo-preview"></div>
+          <div class="required">* При отметке "не соответствует" фото обязательно</div>
+        </div>
+        <div>
+          <label class="btn ghost" style="display:inline-block;cursor:pointer">
+            📷 Фото <input accept="image/*" onchange="attachPhoto(event,this)" style="display:none" type="file" />
+          </label>
+        </div>
+      </div>
+
+      <div class="item" data-item-id="A2" data-points="1">
+        <div class="text">
+          <div class="item-header">
+            <div class="item-number">3</div>
+            <div class="item-text">Личные вещи отсутствуют в рабочей зоне работника (на оборудовании, стуле, стойке и т.д.), в том числе спецодежда. Работник при выполнении своих обязанностей применяет головной убор и перчатки согласно идентификационному фото на оборудовании. Волосы работника полностью убраны под головной убор.</div>
+          </div>
+          <div class="controls">
+            <button class="toggle success" onclick="toggleItem(this, 1)">✅ соответствует (1 балл)</button>
+            <button class="toggle danger" onclick="toggleItem(this, 0)">❌ не соответствует (0 баллов)</button>
+          </div>
+          <textarea class="comment" placeholder="Комментарий с указанием номера оборудования, где выявлено несоответствие"></textarea>
+          <div class="photo-preview"></div>
+          <div class="required">* При отметке "не соответствует" фото обязательно</div>
+        </div>
+        <div>
+          <label class="btn ghost" style="display:inline-block;cursor:pointer">
+            📷 Фото <input accept="image/*" onchange="attachPhoto(event,this)" style="display:none" type="file" />
+          </label>
+        </div>
+      </div>
+      <div class="item" data-item-id="A2" data-points="1">
+        <div class="text">
+          <div class="item-header">
+            <div class="item-number">4</div>
+            <div class="item-text">Личные вещи отсутствуют в рабочей зоне работника (на оборудовании, стуле, стойке и т.д.), в том числе спецодежда. Работник при выполнении своих обязанностей применяет головной убор и перчатки согласно идентификационному фото на оборудовании. Волосы работника полностью убраны под головной убор.</div>
+          </div>
+          <div class="controls">
+            <button class="toggle success" onclick="toggleItem(this, 1)">✅ соответствует (1 балл)</button>
+            <button class="toggle danger" onclick="toggleItem(this, 0)">❌ не соответствует (0 баллов)</button>
+          </div>
+          <textarea class="comment" placeholder="Комментарий с указанием номера оборудования, где выявлено несоответствие"></textarea>
+          <div class="photo-preview"></div>
+          <div class="required">* При отметке "не соответствует" фото обязательно</div>
+        </div>
+        <div>
+          <label class="btn ghost" style="display:inline-block;cursor:pointer">
+            📷 Фото <input accept="image/*" onchange="attachPhoto(event,this)" style="display:none" type="file" />
+          </label>
+        </div>
+      </div>
+      <div class="item" data-item-id="A2" data-points="1">
+        <div class="text">
+          <div class="item-header">
+            <div class="item-number">5</div>
+            <div class="item-text">Личные вещи отсутствуют в рабочей зоне работника (на оборудовании, стуле, стойке и т.д.), в том числе спецодежда. Работник при выполнении своих обязанностей применяет головной убор и перчатки согласно идентификационному фото на оборудовании. Волосы работника полностью убраны под головной убор.</div>
+          </div>
+          <div class="controls">
+            <button class="toggle success" onclick="toggleItem(this, 1)">✅ соответствует (1 балл)</button>
+            <button class="toggle danger" onclick="toggleItem(this, 0)">❌ не соответствует (0 баллов)</button>
+          </div>
+          <textarea class="comment" placeholder="Комментарий с указанием номера оборудования, где выявлено несоответствие"></textarea>
+          <div class="photo-preview"></div>
+          <div class="required">* При отметке "не соответствует" фото обязательно</div>
+        </div>
+        <div>
+          <label class="btn ghost" style="display:inline-block;cursor:pointer">
+            📷 Фото <input accept="image/*" onchange="attachPhoto(event,this)" style="display:none" type="file" />
+          </label>
+        </div>
+      </div>
+      <div class="item" data-item-id="A2" data-points="1">
+        <div class="text">
+          <div class="item-header">
+            <div class="item-number">6</div>
+            <div class="item-text">Личные вещи отсутствуют в рабочей зоне работника (на оборудовании, стуле, стойке и т.д.), в том числе спецодежда. Работник при выполнении своих обязанностей применяет головной убор и перчатки согласно идентификационному фото на оборудовании. Волосы работника полностью убраны под головной убор.</div>
+          </div>
+          <div class="controls">
+            <button class="toggle success" onclick="toggleItem(this, 1)">✅ соответствует (1 балл)</button>
+            <button class="toggle danger" onclick="toggleItem(this, 0)">❌ не соответствует (0 баллов)</button>
+          </div>
+          <textarea class="comment" placeholder="Комментарий с указанием номера оборудования, где выявлено несоответствие"></textarea>
+          <div class="photo-preview"></div>
+          <div class="required">* При отметке "не соответствует" фото обязательно</div>
+        </div>
+        <div>
+          <label class="btn ghost" style="display:inline-block;cursor:pointer">
+            📷 Фото <input accept="image/*" onchange="attachPhoto(event,this)" style="display:none" type="file" />
+          </label>
+        </div>
+      </div>
+
+      <!-- Добавьте остальные пункты A3-A6 по аналогии -->
+      
+    </div>
+
+    <!-- SECTION B1 -->
+    <div class="section" data-section-id="B1">
+      <div class="section-header">
+        <h3>B1. Ответственность наладчика производственного участка</h3>
+        <div class="section-score">Баллы: <span id="scoreB1">0</span></div>
+      </div>
+      
+      <!-- item B1-1 -->
+      <div class="item" data-item-id="B1-1" data-points="1">
+        <div class="text">
+          <div class="item-header">
+            <div class="item-number">1</div>
+            <div class="item-text">Отсутствие пыли и грязи на оборудовании (станине, конвейерной ленте, шлангах и других элементах оборудования). Пол около оборудования чистый и сухой, нет разливов масла и других жидкостей</div>
+          </div>
+          <div class="controls">
+            <button class="toggle success" onclick="toggleItem(this, 1)">✅ соответствует (1 балл)</button>
+            <button class="toggle danger" onclick="toggleItem(this, 0)">❌ не соответствует (0 баллов)</button>
+          </div>
+          <textarea class="comment" placeholder="Комментарий с указанием номера оборудования, где выявлено несоответствие"></textarea>
+          <div class="photo-preview"></div>
+          <div class="required">* При отметке "не соответствует" фото обязательно</div>
+        </div>
+        <div>
+          <label class="btn ghost" style="display:inline-block;cursor:pointer">
+            📷 Фото <input accept="image/*" onchange="attachPhoto(event,this)" style="display:none" type="file" />
+          </label>
+        </div>
+      </div>
+
+      <!-- Добавьте остальные пункты B1-2 - B1-6 по аналогии -->
+      
+    </div>
+
+    <!-- SECTION B2 -->
+    <div class="section" data-section-id="B2">
+      <div class="section-header">
+        <h3>B2. Ответственность персонала ЭМО</h3>
+        <div class="section-score">Баллы: <span id="scoreB2">0</span></div>
+      </div>
+      
+      <!-- item B2-1 -->
+      <div class="item" data-item-id="B2-1" data-points="1">
+        <div class="text">
+          <div class="item-header">
+            <div class="item-number">1</div>
+            <div class="item-text">Течь масла, охлаждающих жидкостей с оборудования отсутствует. Пол около оборудования чистый и сухой</div>
+          </div>
+          <div class="controls">
+            <button class="toggle success" onclick="toggleItem(this, 1)">✅ соответствует (1 балл)</button>
+            <button class="toggle danger" onclick="toggleItem(this, 0)">❌ не соответствует (0 баллов)</button>
+          </div>
+          <textarea class="comment" placeholder="Комментарий с указанием номера оборудования, где выявлено несоответствие"></textarea>
+          <div class="photo-preview"></div>
+          <div class="required">* При отметке "не соответствует" фото обязательно</div>
+        </div>
+        <div>
+          <label class="btn ghost" style="display:inline-block;cursor:pointer">
+            📷 Фото <input accept="image/*" onchange="attachPhoto(event,this)" style="display:none" type="file" />
+          </label>
+        </div>
+      </div>
+
+      <!-- Добавьте остальные пункты B2-2 - B2-6 по аналогии -->
+      
+    </div>
+
+    <!-- SECTION C -->
+    <div class="section" data-section-id="C">
+      <div class="section-header">
+        <h3>C. Состояние производственного участка и вспомогательных помещений</h3>
+        <div class="section-score">Баллы: <span id="scoreC">0</span></div>
+      </div>
+      
+      <!-- item C1 -->
+      <div class="item" data-item-id="C1" data-points="1">
+        <div class="text">
+          <div class="item-header">
+            <div class="item-number">1</div>
+            <div class="item-text">Пол, подоконники, колонны, стены, двери чистые (нет пыли, грязи и др.) и не имеют повреждений. Уборочный инвентарь размещен аккуратно в установленном месте, в необходимом количестве и ассортименте</div>
+          </div>
+          <div class="controls">
+            <button class="toggle success" onclick="toggleItem(this, 1)">✅ соответствует (1 балл)</button>
+            <button class="toggle danger" onclick="toggleItem(this, 0)">❌ не соответствует (0 баллов)</button>
+          </div>
+          <textarea class="comment" placeholder="Комментарий с указанием номера оборудования, где выявлено несоответствие"></textarea>
+          <div class="photo-preview"></div>
+          <div class="required">* При отметке "не соответствует" фото обязательно</div>
+        </div>
+        <div>
+          <label class="btn ghost" style="display:inline-block;cursor:pointer">
+            📷 Фото <input accept="image/*" onchange="attachPhoto(event,this)" style="display:none" type="file" />
+          </label>
+        </div>
+      </div>
+
+      <!-- Добавьте остальные пункты C2-C6 по аналогии -->
+      
+    </div>
+
+    <!-- ИТОГОВАЯ ОЦЕНКА -->
+    <div class="final-score">
+      <div>Итоговая оценка структурному подразделению</div>
+      <div class="final-score-value" id="finalScore">0</div>
+      <div>баллов</div>
+    </div>
+
+    <div class="submit-row">
+      <div style="flex:1">
+        <div style="font-size:13px;color:var(--muted)">Прогресс заполнения</div>
+        <div class="progress" aria-hidden><i id="progressBar"></i></div>
+      </div>
+      <div style="min-width:120px;text-align:right">
+        <button class="btn" id="submitBtn" onclick="submitChecklist()" disabled>📤 Отправить проверку</button>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:12px;color:var(--muted);font-size:13px">
+    <strong>Примечание:</strong> При выявлении одного и того же несоответствия 2 раза - "3 балла", более 2 раз - "2 балла". При отсутствии повторяющихся несоответствий данная графа не заполняется.
+  </div>
+</div>
+
+<!-- Модальное окно для просмотра фото -->
+<div class="photo-modal" id="photoModal" onclick="closePhotoModal()">
+  <div class="photo-modal-close">×</div>
+  <img id="modalImage" src="" alt="Увеличенное фото">
+</div>
+
+<!-- Индикатор загрузки -->
+<div class="loading" id="loadingIndicator">
+  <div class="loading-spinner"></div>
+  <div style="margin-top:12px;color:var(--accent);font-weight:600">Отправка данных...</div>
+</div>
+
+<script>
+  const API_URL = "http://localhost:8000";
+  let currentScores = {
+    A: 0, B1: 0, B2: 0, C: 0, total: 0
+  };
+
+  // Хранилище для временных файлов
+  let tempFiles = new Map();
+
+  document.getElementById("dateNow").textContent = new Date().toISOString().slice(0,10);
+
+  function toggleItem(btn, points) {
+    const item = btn.closest('.item');
+    const controls = item.querySelector('.controls');
+    
+    // Сбрасываем все кнопки в группе
+    controls.querySelectorAll('.toggle').forEach(b => {
+      b.classList.remove('on');
+    });
+    
+    // Активируем нажатую кнопку
+    btn.classList.add('on');
+    
+    // Обновляем баллы
+    updateScores();
+    updateProgress();
+    validateForm();
+  }
+
+  function attachPhoto(e, el) {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const item = el.closest('.item');
+    const itemId = item.dataset.itemId;
+    const previewContainer = item.querySelector('.photo-preview');
+    
+    // Сохраняем файлы во временное хранилище
+    if (!tempFiles.has(itemId)) {
+      tempFiles.set(itemId, []);
+    }
+
+    Array.from(files).forEach(file => {
+      // Создаем временный URL для предпросмотра
+      const tempUrl = URL.createObjectURL(file);
+      
+      // Сохраняем файл
+      tempFiles.get(itemId).push({
+        file: file,
+        tempUrl: tempUrl
+      });
+      
+      // Создаем элемент предпросмотра
+      const photoItem = document.createElement('div');
+      photoItem.className = 'photo-item';
+      photoItem.innerHTML = `
+        <img src="${tempUrl}" onclick="showPhotoModal('${tempUrl}')">
+        <button class="remove-photo" onclick="removePhoto(this, '${itemId}', '${tempUrl}')">×</button>
+      `;
+      previewContainer.appendChild(photoItem);
+    });
+
+    // Сбрасываем input чтобы можно было выбрать тот же файл снова
+    e.target.value = '';
+    
+    validateForm();
+  }
+
+  function removePhoto(btn, itemId, tempUrl) {
+    const photoItem = btn.closest('.photo-item');
+    photoItem.remove();
+    
+    // Удаляем из временного хранилища
+    if (tempFiles.has(itemId)) {
+      const files = tempFiles.get(itemId);
+      const index = files.findIndex(f => f.tempUrl === tempUrl);
+      if (index > -1) {
+        // Освобождаем URL
+        URL.revokeObjectURL(files[index].tempUrl);
+        files.splice(index, 1);
+      }
+      
+      if (files.length === 0) {
+        tempFiles.delete(itemId);
+      }
+    }
+    
+    validateForm();
+  }
+
+  function showPhotoModal(src) {
+    document.getElementById('modalImage').src = src;
+    document.getElementById('photoModal').style.display = 'flex';
+  }
+
+  function closePhotoModal() {
+    document.getElementById('photoModal').style.display = 'none';
+  }
+
+  function updateScores() {
+    // Сбрасываем баллы
+    currentScores = { A: 0, B1: 0, B2: 0, C: 0, total: 0 };
+    
+    // Считаем баллы по разделам
+    document.querySelectorAll('.item').forEach(item => {
+      const section = item.closest('.section').dataset.sectionId;
+      const points = parseInt(item.dataset.points);
+      const selectedBtn = item.querySelector('.toggle.on');
+      
+      if(selectedBtn && selectedBtn.classList.contains('success')) {
+        currentScores[section] += points;
+      }
+    });
+    
+    // Общий балл
+    currentScores.total = currentScores.A + currentScores.B1 + currentScores.B2 + currentScores.C;
+    
+    // Обновляем отображение
+    document.getElementById('scoreA').textContent = currentScores.A;
+    document.getElementById('scoreB1').textContent = currentScores.B1;
+    document.getElementById('scoreB2').textContent = currentScores.B2;
+    document.getElementById('scoreC').textContent = currentScores.C;
+    document.getElementById('finalScore').textContent = currentScores.total;
+    
+    // Обновляем сводку баллов
+    updateScoreSummary();
+  }
+
+  function updateScoreSummary() {
+    const summary = document.getElementById('scoreSummary');
+    summary.innerHTML = `
+      <div class="score-card">
+        <div class="score-value">${currentScores.A}</div>
+        <div class="score-label">Раздел A</div>
+      </div>
+      <div class="score-card">
+        <div class="score-value">${currentScores.B1}</div>
+        <div class="score-label">Раздел B1</div>
+      </div>
+      <div class="score-card">
+        <div class="score-value">${currentScores.B2}</div>
+        <div class="score-label">Раздел B2</div>
+      </div>
+      <div class="score-card">
+        <div class="score-value">${currentScores.C}</div>
+        <div class="score-label">Раздел C</div>
+      </div>
+    `;
+  }
+
+  function updateProgress() {
+    const items = document.querySelectorAll('.item');
+    let total = items.length, filled = 0;
+    
+    items.forEach(it => {
+      const on = it.querySelector('.toggle.on');
+      if(on) filled++;
+    });
+    
+    const pct = total ? Math.round((filled/total)*100) : 0;
+    document.getElementById('progressBar').style.width = pct + '%';
+  }
+
+  function validateForm() {
+    let isValid = true;
+    
+    document.querySelectorAll('.item').forEach(item => {
+      const selectedBtn = item.querySelector('.toggle.on');
+      const itemId = item.dataset.itemId;
+      const hasPhotos = tempFiles.has(itemId) && tempFiles.get(itemId).length > 0;
+      
+      if(!selectedBtn) {
+        isValid = false;
+      } else if(selectedBtn.classList.contains('danger') && !hasPhotos) {
+        isValid = false;
+      }
+    });
+    
+    document.getElementById('submitBtn').disabled = !isValid;
+  }
+
+  async function uploadPhoto(file) {
+    const fd = new FormData();
+    fd.append("file", file);
+    const resp = await fetch(`${API_URL}/api/v1/checklists/upload_photo`, {
+      method: "POST",
+      body: fd
+    });
+    const data = await resp.json();
+    return API_URL + data.url;
+  }
+
+  async function submitChecklist() {
+    // Показываем индикатор загрузки
+    document.getElementById('loadingIndicator').style.display = 'flex';
+    document.getElementById('submitBtn').disabled = true;
+
+    try {
+      // Сначала загружаем все фото
+      const uploadedPhotos = new Map();
+      
+      for (const [itemId, files] of tempFiles.entries()) {
+        const uploadedUrls = [];
+        for (const fileData of files) {
+          try {
+            const photoUrl = await uploadPhoto(fileData.file);
+            uploadedUrls.push(photoUrl);
+            // Освобождаем временный URL
+            URL.revokeObjectURL(fileData.tempUrl);
+          } catch (error) {
+            console.error(`Ошибка загрузки фото для пункта ${itemId}:`, error);
+          }
+        }
+        uploadedPhotos.set(itemId, uploadedUrls);
+      }
+
+      // Собираем данные формы
+      const items = Array.from(document.querySelectorAll('.item')).map(it => {
+        const id = it.dataset.itemId;
+        const selected = it.querySelector('.toggle.on');
+        const result = selected ? selected.classList.contains('success') ? 'соответствует' : 'не соответствует' : null;
+        const points = selected && selected.classList.contains('success') ? parseInt(it.dataset.points) : 0;
+        const comment = it.querySelector('.comment')?.value || null;
+        const photos = uploadedPhotos.get(id) || [];
+        
+        return { 
+          item_id: id, 
+          result: result,
+          points: points,
+          comment, 
+          photos 
+        };
+      });
+
+      const payload = {
+        form_id: "form_1",
+        date: new Date().toISOString().slice(0,10),
+        inspector_id: 123,
+        inspector_name: document.getElementById('inspectorName').textContent,
+        department_id: 1,
+        department_name: document.getElementById('departmentName').textContent,
+        scores: currentScores,
+        items
+      };
+
+      // Отправляем основной чек-лист
+      const res = await fetch(`${API_URL}/api/v1/checklists`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      if(res.ok) {
+        alert("✅ Проверка отправлена успешно!");
+        window.location.href = "index.html";
+      } else {
+        throw new Error('Ошибка при отправке данных');
+      }
+    } catch (error) {
+      alert("Ошибка при отправке данных: " + error.message);
+      document.getElementById('submitBtn').disabled = false;
+    } finally {
+      // Скрываем индикатор загрузки
+      document.getElementById('loadingIndicator').style.display = 'none';
+    }
+  }
+
+  function exportReport() {
+    alert("Функция экспорта в разработке");
+  }
+
+  // Инициализация
+  updateScoreSummary();
+  updateProgress();
+  validateForm();
+
+  // Очистка временных URL при закрытии страницы
+  window.addEventListener('beforeunload', () => {
+    for (const files of tempFiles.values()) {
+      for (const fileData of files) {
+        URL.revokeObjectURL(fileData.tempUrl);
+      }
+    }
+  });
+</script>
+</body>
+</html>

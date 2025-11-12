@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>МИРАН — Контроль культуры производства (MVP)</title>
+<style>
+  :root{
+    --accent:#0f5ca8; /* синий как на miran */
+    --muted:#666;
+    --card:#fff;
+    --bg:#f5f7fb;
+    --glass: rgba(255,255,255,0.8);
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  }
+  html,body{height:100%;margin:0;background:var(--bg);color:#222}
+  header{
+    background: linear-gradient(90deg,var(--accent),#2b8bd6);
+    color:#fff;
+    padding:18px 20px;
+    display:flex;
+    align-items:center;
+    gap:16px;
+  }
+  .logo{
+    display:flex;align-items:center;gap:10px;font-weight:700;font-size:18px;
+  }
+  nav{margin-left:auto;display:flex;gap:12px;align-items:center}
+  nav a{color:#fff;text-decoration:none;font-weight:600;opacity:.95}
+  main{max-width:1100px;margin:28px auto;padding:20px;}
+  .hero{
+    display:flex;gap:22px;align-items:center;
+    background:var(--glass);border-radius:10px;padding:18px;box-shadow:0 6px 20px rgba(20,30,50,.06);
+  }
+  .hero-left{flex:1}
+  h1{margin:0 0 8px 0;font-size:20px}
+  p.lead{margin:0;color:var(--muted)}
+  .actions{margin-top:18px;display:flex;gap:12px}
+  .btn{
+    background:#fff;color:var(--accent);border-radius:8px;padding:10px 14px;text-decoration:none;font-weight:700;display:inline-flex;gap:8px;align-items:center;box-shadow:0 4px 12px rgba(16,40,80,.06)
+  }
+  .btn.primary{background:#fff;color:var(--accent)}
+  .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,.15);color:#fff}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-top:20px}
+  .card{background:#fff;border-radius:10px;padding:14px;box-shadow:0 4px 18px rgba(12,20,40,.05)}
+  footer{max-width:1100px;margin:24px auto;padding:12px;color:var(--muted);font-size:13px}
+  /* small */
+  @media(max-width:720px){
+    .hero{flex-direction:column;align-items:stretch}
+    nav{display:none}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">
+    <div style="width:44px;height:44px;background:#fff;border-radius:8px"></div>
+    МИРАН (MVP)
+  </div>
+  <nav>
+    <a href="#">Главная</a>
+    <a href="#">Каталог</a>
+    <a href="#">О компании</a>
+    <a href="#">Контакты</a>
+  </nav>
+</header>
+
+<main>
+  <section class="hero" role="region" aria-label="hero">
+    <div class="hero-left">
+      <h1>Система контроля культуры производства</h1>
+      <p class="lead">Быстрые цифровые проверки, фото-эталоны, автоматическая аналитика и напоминания для работников.</p>
+
+      <div class="actions">
+        <a class="btn primary" href="checklist.html">➕ Создать чек-лист</a>
+        <a class="btn" href="#" onclick="alert('Откроется аналитика')">📊 Аналитика</a>
+      </div>
+    </div>
+
+    <div style="width:360px;">
+      <div style="background:linear-gradient(180deg,#fff,#f7fbff);padding:12px;border-radius:10px">
+        <h3 style="margin:0 0 8px 0;font-size:15px;color:#0f5ca8">Проверки на сегодня</h3>
+        <ul style="padding-left:18px;margin:0;color:var(--muted);font-size:14px;line-height:1.6">
+          <li>Участок: Подача материалов — 09:00</li>
+          <li>Участок: Сборочный — 10:30</li>
+          <li>Участок: Упаковка — 12:00</li>
+        </ul>
+        <div style="margin-top:12px;text-align:right"><a class="btn" href="#" onclick="alert('Показать все')">Все проверки</a></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="cards" style="margin-top:18px">
+    <div class="card">
+      <h4 style="margin:0 0 6px 0">Настройка чек-листов</h4>
+      <p style="margin:0;color:var(--muted)">Создавайте формы, добавляйте эталоны и пункты с подсказками.</p>
+    </div>
+    <div class="card">
+      <h4 style="margin:0 0 6px 0">Уведомления</h4>
+      <p style="margin:0;color:var(--muted)">Рассылка в Telegram, напоминания по расписанию.</p>
+    </div>
+    <div class="card">
+      <h4 href="http://localhost:8000/landing"style="margin:0 0 6px 0">Отчёты</h4>
+      <p style="margin:0;color:var(--muted)">Экспорт в Excel / Word. Автосоздание отчётов раз в день.</p>
+    </div>
+  </div>
+</main>
+
+<footer>
+  © 2025, ООО «МИРАН» — демонстрационный интерфейс для внутренней системы контроля.
+</footer>
+</body>
+</html>
