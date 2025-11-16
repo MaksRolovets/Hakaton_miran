@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title if title else "Miran" }}</title>
+
+    <!-- Шрифт Open Sans -->
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <!-- Стили -->
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <!-- ===== ШАПКА ===== -->
+    <header class="miran-header">
+        <div class="miran-container miran-header-inner">
+            <div class="miran-logo">
+                <a href="/" class="miran-logo-link">
+                    <img src="/static/img/logo.png" alt="Miran" />
+                    <span>Производитель пластиковой упаковки</span>
+                </a>
+            </div>
+            <nav class="miran-nav">
+                <a href="/">Главная</a>
+                <a href="#">Каталог</a>
+                <a href="#">О компании</a>
+                <a href="#">Контакты</a>
+            </nav>
+            <div class="miran-header-right">
+                {% if user %}
+                    <span class="miran-username">{{ user }}</span>
+                    <a href="/logout" class="miran-btn miran-btn-outline">Выйти</a>
+                {% else %}
+                    <a href="/login" class="miran-btn miran-btn-outline">Войти</a>
+                    <a href="/register" class="miran-btn miran-btn-primary">Регистрация</a>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <!-- ===== ОСНОВНОЙ КОНТЕНТ ===== -->
+    <main class="miran-main">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- ===== ПОДВАЛ ===== -->
+    <footer class="miran-footer">
+        <div class="miran-container">
+            <p>© {{ current_year if current_year else "2025" }} Miran. Все права защищены.</p>
+        </div>
+    </footer>
+</body>
+</html>

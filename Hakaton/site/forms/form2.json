@@ -1,0 +1,198 @@
+{
+  "title": "Форма2.Чек-лист оценки состояния оборудования и рабочего пространства",
+  "classes": [
+    {
+      "letter": "A",
+      "name": "Состояние рабочего пространства дробильщика",
+      "includeInScore": true,
+      "questions": [
+        {
+          "id": "q-1-a1b2c3d4",
+          "number": "1",
+          "criterion": "На полу отсутствует пыль, грязь. Под оборудованием и вокруг него отсутствует россыпи сырья, мусор, литники, продукция, пакеты из-под материала, другие предметы",
+          "defaultValue": "Соответствует",
+          "allowGallery": true,
+          "allowPhoto": true,
+          "includeInScore": true
+        },
+        {
+          "id": "q-2-e5f6g7h8",
+          "number": "2",
+          "criterion": "Отсутствие пыли и грязи на оборудовании (станине, шлангах и других элементах оборудования)",
+          "defaultValue": "Соответствует",
+          "allowGallery": true,
+          "allowPhoto": true,
+          "includeInScore": true
+        },
+        {
+          "id": "q-3-i9j0k1l2",
+          "number": "3",
+          "criterion": "Личные вещи отсутствуют в рабочей зоне работника (на оборудовании, стуле, стойке и т.д.), в том числе спецодежда",
+          "defaultValue": "Соответствует",
+          "allowGallery": true,
+          "allowPhoto": true,
+          "includeInScore": true
+        },
+        {
+          "id": "q-4-m3n4o5p6",
+          "number": "4",
+          "criterion": "На оборудовании и в рабочей зоне отсутствуют посторонние предметы, непредназначенные для выполнения профессиональных обязанностей",
+          "defaultValue": "Соответствует",
+          "allowGallery": true,
+          "allowPhoto": true,
+          "includeInScore": true
+        },
+        {
+          "id": "q-5-q7r8s9t0",
+          "number": "5",
+          "criterion": "Внутри оборудования отсутствуют посторонние предметы, в том числе остатки продукции от прошлых производственных партий",
+          "defaultValue": "Соответствует",
+          "allowGallery": true,
+          "allowPhoto": true,
+          "includeInScore": true
+        },
+        {
+          "id": "q-6-u1v2w3x4",
+          "number": "6",
+          "criterion": "Проходы вокруг оборудования свободные и нет загромождений продукцией, тарой, поддонами и другими предметами",
+          "defaultValue": "Соответствует",
+          "allowGallery": true,
+          "allowPhoto": true,
+          "includeInScore": true
+        }
+      ],
+      "subclasses": []
+    },
+    {
+      "letter": "B",
+      "name": "Состояние оборудования",
+      "includeInScore": true,
+      "questions": [],
+      "subclasses": [
+        {
+          "code": "B1",
+          "name": "Ответственность персонала ЭМО",
+          "includeInScore": true,
+          "questions": [
+            {
+              "id": "q-1-y5z6a7b8",
+              "number": "1",
+              "criterion": "Течь масла, охлаждающих жидкостей с оборудования отсутствует. Пол около оборудования чистый и сухой",
+              "defaultValue": "Соответствует",
+              "allowGallery": true,
+              "allowPhoto": true,
+              "includeInScore": true
+            },
+            {
+              "id": "q-2-c9d0e1f2",
+              "number": "2",
+              "criterion": "Внутри оборудования все элементы (провода, шланги и др.) закреплены монтажными стяжками (применение скотча, целлофана, ленточек, ветоши и др. посторонних предметов исключено). Все элементы оборудования закреплены резьбовыми соединениями (винтами, болтами, саморезами, гайками).",
+              "defaultValue": "Соответствует",
+              "allowGallery": true,
+              "allowPhoto": true,
+              "includeInScore": true
+            },
+            {
+              "id": "q-3-g3h4i5j6",
+              "number": "3",
+              "criterion": "Провода, шланги вокруг оборудования закреплены, не выступают в рабочую зону и не препятствуют безопасному перемещению внутри рабочей зоны",
+              "defaultValue": "Соответствует",
+              "allowGallery": true,
+              "allowPhoto": true,
+              "includeInScore": true
+            },
+            {
+              "id": "q-4-k7l8m9n0",
+              "number": "4",
+              "criterion": "На технологическом оборудовании и других видах оборудования, применяемых на участке, отсутствуют повреждения изоляции электропроводки, лакокрасочных покрытий и т.д.",
+              "defaultValue": "Соответствует",
+              "allowGallery": true,
+              "allowPhoto": true,
+              "includeInScore": true
+            },
+            {
+              "id": "q-5-o1p2q3r4",
+              "number": "5",
+              "criterion": "Отсутствуют вещи, оставшиеся после работы вспомогательных служб на производственном участке",
+              "defaultValue": "Соответствует",
+              "allowGallery": true,
+              "allowPhoto": true,
+              "includeInScore": true
+            },
+            {
+              "id": "q-6-s5t6u7v8",
+              "number": "6",
+              "criterion": "На оборудовании имеются все защитные ограждения, предусмотренные конструкцией оборудования, в том числе закрывающие подвижные механизмы. Защитные стекла целые, не имеют трещин и сколов",
+              "defaultValue": "Соответствует",
+              "allowGallery": true,
+              "allowPhoto": true,
+              "includeInScore": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "letter": "C",
+      "name": "Состояние производственного участка",
+      "includeInScore": true,
+      "questions": [
+        {
+          "id": "q-1-w9x0y1z2",
+          "number": "1",
+          "criterion": "Пол, подоконники, колонны, стены, двери чистые (нет пыли, грязи и др.) и не имеют повреждений",
+          "defaultValue": "Соответствует",
+          "allowGallery": true,
+          "allowPhoto": true,
+          "includeInScore": true
+        },
+        {
+          "id": "q-2-a3b4c5d6",
+          "number": "2",
+          "criterion": "Уборочный инвентарь размещен аккуратно в установленном месте, в необходимом количестве и ассортименте",
+          "defaultValue": "Соответствует",
+          "allowGallery": true,
+          "allowPhoto": true,
+          "includeInScore": true
+        },
+        {
+          "id": "q-3-e7f8g9h0",
+          "number": "3",
+          "criterion": "Все отходы собираются и своевременно вывозятся",
+          "defaultValue": "Соответствует",
+          "allowGallery": true,
+          "allowPhoto": true,
+          "includeInScore": true
+        },
+        {
+          "id": "q-4-i1j2k3l4",
+          "number": "4",
+          "criterion": "Места и стеллажи, предназначенные для хранения сырья, основных и вспомогательных материалов (идентифицированы и в исправном состоянии)",
+          "defaultValue": "Соответствует",
+          "allowGallery": true,
+          "allowPhoto": true,
+          "includeInScore": true
+        },
+        {
+          "id": "q-5-m5n6o7p8",
+          "number": "5",
+          "criterion": "В местах хранения и на стеллажах хранятся вещи и ТМЦ, соответствующие идентификационным надписям",
+          "defaultValue": "Соответствует",
+          "allowGallery": true,
+          "allowPhoto": true,
+          "includeInScore": true
+        },
+        {
+          "id": "q-6-q9r0s1t2",
+          "number": "6",
+          "criterion": "Проходы и проезды без загромождений тарой для упаковывания продукции, посторонними предметами и др.ТМЦ, все предметы размещены в установленных местах, имеющих соответствующую цветовую разметку",
+          "defaultValue": "Соответствует",
+          "allowGallery": true,
+          "allowPhoto": true,
+          "includeInScore": true
+        }
+      ],
+      "subclasses": []
+    }
+  ]
+}

@@ -1,0 +1,187 @@
+.miran-auth-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 1.2rem;
+    margin-top: 3rem;
+    font-family: 'Open Sans', sans-serif;
+  }
+  
+  .miran-btn {
+    padding: 0.7rem 1.6rem;
+    font-size: 1rem;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.25s ease;
+    border: 2px solid #c8d400;
+  }
+  
+  .miran-btn-primary {
+    background-color: #c8d400;
+    color: #fff;
+  }
+  
+  .miran-btn-primary:hover {
+    background-color: #b0be00;
+  }
+  
+  .miran-btn-outline {
+    background-color: #fff;
+    color: #333;
+  }
+  
+  .miran-btn-outline:hover {
+    background-color: #f5f5f5;
+  }
+  
+  .miran-auth-container {
+    max-width: 400px;
+    margin: 4rem auto;
+    padding: 2rem;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    font-family: 'Open Sans', sans-serif;
+  }
+  
+  .miran-auth-container h2 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 1.5rem;
+  }
+  
+  .miran-auth-container form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .miran-auth-container label {
+    font-weight: 600;
+    color: #333;
+  }
+  
+  .miran-auth-container input {
+    padding: 0.6rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 1rem;
+  }
+  
+  .miran-auth-container input:focus {
+    outline: none;
+    border-color: #c8d400;
+    box-shadow: 0 0 0 2px rgba(200,212,0,0.2);
+  }
+  
+  .miran-form-footer {
+    text-align: center;
+    margin-top: 1rem;
+    font-size: 0.9rem;
+  }
+  
+  .miran-form-footer a {
+    color: #c8d400;
+    text-decoration: none;
+  }
+  
+  .miran-form-footer a:hover {
+    text-decoration: underline;
+  }
+  body {
+    margin: 0;
+    font-family: 'Open Sans', sans-serif;
+    background-color: #f8f9fa;
+    color: #333;
+  }
+  
+  /* ====== ШАПКА ====== */
+  .miran-header {
+    background-color: #fff;
+    border-bottom: 1px solid #e5e7eb;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    padding: 0.6rem 0;
+  }
+  
+  .miran-container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  
+  .miran-header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  
+  .miran-logo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .miran-logo img {
+    height: 40px;
+  }
+  
+  .miran-logo-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    color: #333;
+    font-weight: 700;
+  }
+  
+  .miran-logo span {
+    font-size: 0.9rem;
+    color: #666;
+  }
+  
+  .miran-nav {
+    display: flex;
+    gap: 1.2rem;
+  }
+  
+  .miran-nav a {
+    text-decoration: none;
+    color: #333;
+    font-weight: 600;
+    transition: 0.2s;
+  }
+  
+  .miran-nav a:hover {
+    color: #c8d400;
+  }
+  
+  /* ====== ПРАВАЯ ЧАСТЬ ХЕДЕРА ====== */
+  .miran-header-right {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+  }
+  
+  .miran-username {
+    font-weight: 600;
+    color: #333;
+  }
+  
+  /* ====== ОСНОВНОЙ КОНТЕНТ ====== */
+  .miran-main {
+    min-height: 80vh;
+    padding: 3rem 1rem;
+  }
+  
+  /* ====== ПОДВАЛ ====== */
+  .miran-footer {
+    background-color: #fff;
+    border-top: 1px solid #e5e7eb;
+    text-align: center;
+    padding: 1rem 0;
+    font-size: 0.9rem;
+    color: #666;
+  }
+  
+  

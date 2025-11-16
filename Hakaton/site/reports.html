@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Архив Отчетов</title>
+<!-- Подключаем общие стили -->
+<link rel="stylesheet" href="styles.css">
+
+<!-- CDN-скрипты для генерации PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<!-- Дополнительные стили, специфичные для этой страницы -->
+<style>
+  #report-viewer h3, #report-viewer h4 { margin-top: 2rem; }
+  .report-question {
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    background-color: #fdfdfd;
+  }
+  .report-answer { font-weight: bold; }
+  .report-answer.success { color: var(--success-color); }
+  .report-answer.danger { color: var(--danger-color); }
+  .report-comment {
+    margin-top: 0.5rem;
+    padding-left: 1rem;
+    border-left: 3px solid #eee;
+    color: var(--text-muted-color);
+  }
+  .report-photo img {
+    max-width: 400px;
+    max-height: 400px;
+    border-radius: 8px;
+    margin-top: 1rem;
+    border: 1px solid var(--border-color);
+  }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+    <a href="/" class="logo">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#ffffff"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M9 20H4C3.44772 20 3 19.5523 3 19V5C3 4.44772 3.44772 4 4 4H14.5C14.7761 4 15 4.22386 15 4.5V9.5M9 20V14C9 13.4477 9.44772 13 10 13H14C14.5523 13 15 13.4477 15 14V20M9 20H15M19 16L19 12M19 12L17 14M19 12L21 14" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path> </g></svg>
+        <span>МИРАН | Культура Производства</span>
+    </a>
+    <nav>
+        <a href="/">Главная</a>
+        <a href="/checklist_filler.html">Заполнить отчет</a>
+        <a href="/constructor.html">Конструктор форм</a>
+        <!-- Можно добавить ссылку на эту же страницу -->
+        <a href="/reports.html" class="active">Архив отчетов</a>
+    </nav>
+</header>
+<main>
+  <h1>Архив Отчетов</h1>
+
+  <section class="section-card">
+    <h2>1. Выберите дату и отчет</h2>
+    <div class="form-group">
+      <label for="reportDate">Выберите дату</label>
+      <input type="date" id="reportDate" class="form-control" onchange="loadReportsForDate()">
+    </div>
+    <div class="form-group">
+      <label for="reportSelect">Выберите отчет для просмотра</label>
+      <select id="reportSelect" class="form-control" onchange="loadSelectedReport()" disabled>
+        <option>Сначала выберите дату</option>
+      </select>
+    </div>
+  </section>
+
+  <section id="report-viewer-container" class="section-card" style="display:none;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+      <h2 id="report-title" style="margin: 0;">Просмотр отчета</h2>
+      <button id="exportPdfButton" class="btn btn-primary" onclick="exportReportToPdf()">📄 Экспорт в PDF</button>
+    </div>
+    <div id="report-viewer">
+      <!-- Содержимое отчета будет сгенерировано здесь -->
+    </div>
+  </section>
+
+</main>
+<script>
+let selectedDatePath = ''; // Глобальная переменная для хранения пути к папке с отчетами
+
+async function loadReportsForDate() {
+    const dateInput = document.getElementById('reportDate');
+    const reportSelect = document.getElementById('reportSelect');
+    const viewerContainer = document.getElementById('report-viewer-container');
+    
+    if (!dateInput.value) return;
+
+    const date = new Date(dateInput.value);
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+
+    selectedDatePath = `/reports/${year}/${String(month).padStart(2, '0')}/${String(day).padStart(2, '0')}`;
+    
+    reportSelect.innerHTML = '<option>Загрузка...</option>';
+    reportSelect.disabled = true;
+    viewerContainer.style.display = 'none';
+
+    try {
+        const response = await fetch(`/api/reports/${year}/${month}/${day}`);
+        if (!response.ok) throw new Error('Ошибка сети');
+        const reportFiles = await response.json();
+
+        if (reportFiles.length > 0) {
+            reportSelect.innerHTML = '<option value="">-- Выберите отчет --</option>';
+            reportFiles.forEach(filename => {
+                const option = document.createElement('option');
+                option.value = filename;
+                option.textContent = filename.replace('.json', '').replace(/_/g, ' ');
+                reportSelect.appendChild(option);
+            });
+            reportSelect.disabled = false;
+        } else {
+            reportSelect.innerHTML = '<option>Отчетов за эту дату не найдено</option>';
+        }
+    } catch (error) {
+        console.error("Не удалось загрузить список отчетов:", error);
+        reportSelect.innerHTML = '<option>Ошибка загрузки</option>';
+    }
+}
+
+async function loadSelectedReport() {
+    const reportSelect = document.getElementById('reportSelect');
+    const filename = reportSelect.value;
+    const viewerContainer = document.getElementById('report-viewer-container');
+    
+    if (!filename) {
+        viewerContainer.style.display = 'none';
+        return;
+    }
+
+    const reportPath = `${selectedDatePath}/${filename}`;
+    try {
+        const response = await fetch(reportPath);
+        if (!response.ok) throw new Error('Не удалось загрузить файл отчета');
+        const reportData = await response.json();
+        renderReport(reportData);
+        viewerContainer.style.display = 'block';
+    } catch (error) {
+        console.error("Ошибка загрузки отчета:", error);
+        alert('Не удалось загрузить данные отчета.');
+    }
+}
+
+function renderReport(data) {
+    const viewer = document.getElementById('report-viewer');
+    document.getElementById('report-title').textContent = data.title || "Отчет";
+    
+    let html = `
+        <p><strong>Структурное отделение:</strong> ${data.department || 'Не указано'}</p>
+        <p><strong>Дата заполнения:</strong> ${new Date(data.completionDate).toLocaleString('ru-RU')}</p>
+        <hr>`;
+
+    const createQuestionHtml = (q) => {
+        const answerClass = q.userAnswer === 'Соответствует' ? 'success' : 'danger';
+        const photoFilename = q.userPhoto ? q.userPhoto.replace('FILE:', '') : null;
+        
+        let questionHtml = `
+            <div class="report-question">
+                <p><strong>${q.number}. ${q.criterion}</strong></p>
+                <p><strong>Оценка:</strong> <span class="report-answer ${answerClass}">${q.userAnswer}</span></p>`;
+        
+        if (q.userComment) {
+            questionHtml += `<p class="report-comment"><em>Комментарий: ${q.userComment}</em></p>`;
+        }
+        if (photoFilename) {
+            questionHtml += `<div class="report-photo"><img src="/photos/${photoFilename}" alt="Фото к вопросу ${q.number}"></div>`;
+        }
+        
+        questionHtml += `</div>`;
+        return questionHtml;
+    };
+    
+    data.classes?.forEach(cls => {
+        html += `<h3>Класс ${cls.letter}: ${cls.name}</h3>`;
+        cls.questions?.forEach(q => { html += createQuestionHtml(q); });
+        cls.subclasses?.forEach(subcls => {
+            html += `<h4>Подкласс ${subcls.code}: ${subcls.name}</h4>`;
+            subcls.questions?.forEach(q => { html += createQuestionHtml(q); });
+        });
+    });
+
+    viewer.innerHTML = html;
+}
+
+function exportReportToPdf() {
+    const { jsPDF } = window.jspdf;
+    const reportElement = document.getElementById('report-viewer');
+    const reportTitle = document.getElementById('report-title').textContent;
+    const filename = `${reportTitle.replace(/ /g, '_')}.pdf`;
+
+    // Используем html2canvas для создания "снимка" элемента
+    html2canvas(reportElement, { scale: 2 }).then(canvas => {
+        const imgData = canvas.toDataURL('image/png');
+        
+        const pdf = new jsPDF({
+            orientation: 'portrait',
+            unit: 'px',
+            format: [canvas.width, canvas.height] // Размер PDF соответствует размеру контента
+        });
+
+        pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+        pdf.save(filename);
+    });
+}
+</script>
+</body>
+</html>

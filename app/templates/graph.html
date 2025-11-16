@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>График проверок</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .header h1 {
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+            font-size: 2.5rem;
+        }
+        
+        .header p {
+            color: #7f8c8d;
+            font-size: 1.1rem;
+        }
+        
+        .controls {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        
+        .btn {
+            padding: 1rem 1.5rem;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+        }
+        
+        .btn-success {
+            background: #27ae60;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #219a52;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.3);
+        }
+        
+        .btn-warning {
+            background: #f39c12;
+            color: white;
+        }
+        
+        .btn-warning:hover {
+            background: #e67e22;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(243, 156, 18, 0.3);
+        }
+        
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+        }
+        
+        .schedule-grid {
+            display: grid;
+            gap: 1.5rem;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        }
+        
+        .schedule-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-left: 5px solid #3498db;
+            transition: transform 0.3s ease;
+        }
+        
+        .schedule-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .schedule-card.planned {
+            border-left-color: #3498db;
+        }
+        
+        .schedule-card.completed {
+            border-left-color: #27ae60;
+        }
+        
+        .schedule-card.cancelled {
+            border-left-color: #e74c3c;
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .date-badge {
+            background: #3498db;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .status-badge {
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .status-planned {
+            background: #d6eaf8;
+            color: #3498db;
+        }
+        
+        .status-completed {
+            background: #d5f4e6;
+            color: #27ae60;
+        }
+        
+        .status-cancelled {
+            background: #fadbd8;
+            color: #e74c3c;
+        }
+        
+        .card-body {
+            margin-bottom: 1rem;
+        }
+        
+        .info-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            gap: 0.5rem;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            color: #7f8c8d;
+            min-width: 120px;
+        }
+        
+        .info-value {
+            color: #2c3e50;
+        }
+        
+        .card-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .btn-small {
+            padding: 0.5rem 1rem;
+            font-size: 0.8rem;
+            border-radius: 8px;
+        }
+        
+        .filters {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .filter-select {
+            padding: 0.75rem;
+            border: 2px solid #ecf0f1;
+            border-radius: 8px;
+            font-size: 1rem;
+            background: white;
+            min-width: 200px;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-planned { color: #3498db; }
+        .stat-completed { color: #27ae60; }
+        .stat-cancelled { color: #e74c3c; }
+        .stat-total { color: #9b59b6; }
+        
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .empty-state h3 {
+            color: #7f8c8d;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📅 График проверок предприятия</h1>
+            <p>Управление плановыми проверками и контроль их выполнения</p>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number stat-total">12</div>
+                <div>Всего проверок</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number stat-planned">8</div>
+                <div>Запланировано</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number stat-completed">3</div>
+                <div>Выполнено</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number stat-cancelled">1</div>
+                <div>Отменено</div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="btn btn-primary">
+                <span>➕</span> Новая проверка
+            </button>
+            <button class="btn btn-success">
+                <span>📤</span> Отправить в n8n
+            </button>
+            <button class="btn btn-warning">
+                <span>🔄</span> Обновить график
+            </button>
+            <button class="btn btn-danger">
+                <span>📧</span> Напомнить всем
+            </button>
+        </div>
+        
+        <div class="filters">
+            <select class="filter-select">
+                <option>Все отделы</option>
+                <option>Отделение раздува (УПП)</option>
+                <option>Дробильное отделение</option>
+                <option>Инструментальный участок</option>
+            </select>
+            
+            <select class="filter-select">
+                <option>Все инспекторы</option>
+                <option>Петров Петр</option>
+                <option>Сидоров Алексей</option>
+            </select>
+            
+            <select class="filter-select">
+                <option>Все статусы</option>
+                <option>Запланировано</option>
+                <option>Выполнено</option>
+                <option>Отменено</option>
+            </select>
+            
+            <input type="date" class="filter-select" value="2024-01-15">
+        </div>
+        
+        <div class="schedule-grid">
+            <!-- Карточка запланированной проверки -->
+            <div class="schedule-card planned">
+                <div class="card-header">
+                    <div class="date-badge">15 Янв 2024</div>
+                    <div class="status-badge status-planned">Запланировано</div>
+                </div>
+                <div class="card-body">
+                    <div class="info-row">
+                        <span class="info-label">⏰ Время:</span>
+                        <span class="info-value">09:00 - 11:00</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">👤 Инспектор:</span>
+                        <span class="info-value">Петров Петр</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">🏭 Отдел:</span>
+                        <span class="info-value">Отделение раздува (УПП)</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">📋 Чек-лист:</span>
+                        <span class="info-value">Форма 1. УПП</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">📝 Заметки:</span>
+                        <span class="info-value">Ежедневная плановая проверка</span>
+                    </div>
+                </div>
+                <div class="card-actions">
+                    <button class="btn btn-primary btn-small">✅ Выполнить</button>
+                    <button class="btn btn-warning btn-small">✏️ Редактировать</button>
+                    <button class="btn btn-danger btn-small">❌ Отменить</button>
+                </div>
+            </div>
+            
+            <!-- Карточка выполненной проверки -->
+            <div class="schedule-card completed">
+                <div class="card-header">
+                    <div class="date-badge">14 Янв 2024</div>
+                    <div class="status-badge status-completed">Выполнено</div>
+                </div>
+                <div class="card-body">
+                    <div class="info-row">
+                        <span class="info-label">⏰ Время:</span>
+                        <span class="info-value">14:00 - 16:00</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">👤 Инспектор:</span>
+                        <span class="info-value">Сидоров Алексей</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">🏭 Отдел:</span>
+                        <span class="info-value">Дробильное отделение</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">📋 Чек-лист:</span>
+                        <span class="info-value">Форма 2. Дробильное</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">⭐ Результат:</span>
+                        <span class="info-value">95% соответствия</span>
+                    </div>
+                </div>
+                <div class="card-actions">
+                    <button class="btn btn-primary btn-small">👁️ Просмотреть</button>
+                    <button class="btn btn-success btn-small">📊 Отчет</button>
+                </div>
+            </div>
+            
+            <!-- Еще одна запланированная проверка -->
+            <div class="schedule-card planned">
+                <div class="card-header">
+                    <div class="date-badge">16 Янв 2024</div>
+                    <div class="status-badge status-planned">Запланировано</div>
+                </div>
+                <div class="card-body">
+                    <div class="info-row">
+                        <span class="info-label">⏰ Время:</span>
+                        <span class="info-value">10:00 - 12:00</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">👤 Инспектор:</span>
+                        <span class="info-value">Петров Петр</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">🏭 Отдел:</span>
+                        <span class="info-value">Отделение литья</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">📋 Чек-лист:</span>
+                        <span class="info-value">Форма 1. УПП</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">📝 Заметки:</span>
+                        <span class="info-value">Внеплановая проверка качества</span>
+                    </div>
+                </div>
+                <div class="card-actions">
+                    <button class="btn btn-primary btn-small">✅ Выполнить</button>
+                    <button class="btn btn-warning btn-small">🔄 Перенести</button>
+                    <button class="btn btn-danger btn-small">❌ Отменить</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Состояние когда нет данных -->
+        <!-- <div class="empty-state">
+            <h3>📅 Нет запланированных проверок</h3>
+            <p>Добавьте новую проверку, чтобы начать работу</p>
+        </div> -->
+    </div>
+</body>
+</html>

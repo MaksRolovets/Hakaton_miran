@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Заполнение Чек-листа</title>
+<!-- Подключаем общие стили -->
+<link rel="stylesheet" href="styles.css">
+
+<!-- Дополнительные стили, специфичные только для этой страницы -->
+<style>
+  .photo-filename {
+      margin-left: 1rem;
+      color: var(--text-muted-color);
+      font-style: italic;
+  }
+</style>
+</head>
+<body onload="initializeFillerPage()">
+
+<header class="app-header">
+    <a href="/" class="logo">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w.org/2000/svg" stroke="#ffffff"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M9 20H4C3.44772 20 3 19.5523 3 19V5C3 4.44772 3.44772 4 4 4H14.5C14.7761 4 15 4.22386 15 4.5V9.5M9 20V14C9 13.4477 9.44772 13 10 13H14C14.5523 13 15 13.4477 15 14V20M9 20H15M19 16L19 12M19 12L17 14M19 12L21 14" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path> </g></svg>
+        <span>МИРАН | Культура Производства</span>
+    </a>
+    <nav>
+        <a href="/">Главная</a>
+        <a href="/checklist_filler.html" class="active">Заполнить отчет</a>
+        <a href="/constructor.html">Конструктор форм</a>
+        <a href="/reports.html">Архив отчетов</a>
+    </nav>
+</header>
+<main>
+  <h1>Заполнение Чек-листа</h1>
+  <section class="section-card">
+    <h2>1. Выберите параметры отчета</h2>
+    <div class="form-group">
+        <label for="departmentSelect">Структурное отделение</label>
+        <select id="departmentSelect"><option>Загрузка списка отделений...</option></select>
+    </div>
+    <div class="form-group">
+      <label for="formSelect">Выберите форму для заполнения</label>
+      <select id="formSelect"><option>Загрузка списка форм...</option></select>
+    </div>
+    <button class="btn btn-primary" onclick="loadChecklistFromServer()">🚀 Загрузить и Построить Чек-лист</button>
+  </section>
+  <section id="checklist-and-report-section" style="display:none;" class="section-card">
+      <div id="checklist-filler"></div>
+      <hr style="margin: 2rem 0;">
+      <button class="btn btn-primary" onclick="validateAndSaveReport()">💾 Проверить и Сохранить отчет</button>
+  </section>
+</main>
+<script>
+let currentChecklistTemplate = null;
+
+// --- ИНИЦИАЛИЗАЦИЯ СТРАНИЦЫ ---
+async function initializeFillerPage() {
+    await Promise.all([ loadFormList(), loadDepartments() ]);
+}
+
+// --- ЗАГРУЗКА СПИСКОВ ---
+async function loadDepartments() {
+    try {
+        const response = await fetch('/api/departments');
+        if (!response.ok) throw new Error('Network error');
+        const departments = await response.json();
+        const select = document.getElementById('departmentSelect');
+        select.innerHTML = '<option value="">-- Выберите отделение --</option>';
+        departments.forEach(dept => {
+            select.innerHTML += `<option value="${dept}">${dept}</option>`;
+        });
+    } catch (error) {
+        console.error('Ошибка при загрузке списка отделений:', error);
+        document.getElementById('departmentSelect').innerHTML = '<option>Не удалось загрузить</option>';
+    }
+}
+
+// === ИЗМЕНЕННАЯ ФУНКЦИЯ ЗАГРУЗКИ СПИСКА ФОРМ ===
+async function loadFormList() {
+    try {
+        // 1. Обращаемся к тому же эндпоинту, что и конструктор
+        const response = await fetch('/api/templates');
+        if (!response.ok) throw new Error('Network response was not ok');
+        
+        // 2. Получаем массив объектов (не строк)
+        const templates = await response.json();
+        const select = document.getElementById('formSelect');
+        select.innerHTML = '<option value="">-- Выберите форму --</option>';
+
+        // 3. Работаем с объектами: в value - имя файла, в textContent - заголовок
+        templates.forEach(template => {
+            const option = document.createElement('option');
+            option.value = template.filename; // ezhednevnaya_proverka
+            option.textContent = template.title;   // Ежедневная проверка
+            select.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Ошибка при загрузке списка форм:', error);
+        document.getElementById('formSelect').innerHTML = '<option>Не удалось загрузить формы</option>';
+    }
+}
+
+// --- ЗАГРУЗКА И ОТРИСОВКА ЧЕК-ЛИСТА ---
+async function loadChecklistFromServer() {
+    // Теперь selectedForm - это чистое имя файла без .json, например "ezhednevnaya_proverka"
+    const selectedForm = document.getElementById('formSelect').value;
+    if (!selectedForm) {
+        alert("Пожалуйста, выберите форму.");
+        return;
+    }
+    try {
+        // === ИСПРАВЛЕНИЕ: Запрашиваем шаблон по правильному API-пути ===
+        const response = await fetch(`/api/templates/${selectedForm}`); 
+        if (!response.ok) throw new Error('File not found or server error');
+        currentChecklistTemplate = await response.json();
+        renderChecklist(currentChecklistTemplate);
+        document.getElementById('checklist-and-report-section').style.display = 'block';
+    } catch (e) {
+        alert('Ошибка при загрузке или парсинге JSON-файла.');
+        console.error(e);
+    }
+}
+
+function renderChecklist(template) {
+    const fillerContainer = document.getElementById('checklist-filler');
+    fillerContainer.innerHTML = `<h2 style="margin-bottom: 1.5rem;">${template.title || 'Чек-лист'}</h2>`;
+    
+    const createQuestionCard = q => {
+        const hasDetails = q.allowGallery || q.allowPhoto;
+        const detailsToggleHTML = hasDetails ? `<button class="details-toggle" onclick="toggleDetails(this)"><span>Детали</span><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg></button>` : '';
+        const commentHTML = q.allowGallery ? `<div class="form-group"><label for="comment-${q.id}">Комментарий</label><textarea id="comment-${q.id}" class="checklist-comment" rows="3" placeholder="Укажите номер оборудования и детали несоответствия..."></textarea></div>` : '';
+        
+        const onPhotoChange = `document.getElementById('photo-filename-${q.id}').textContent = this.files.length > 0 ? this.files[0].name : 'Фото не выбрано'`;
+        const photoHTML = q.allowPhoto ? `
+            <div class="form-group">
+                <label>Фото</label>
+                <div>
+                    <label for="photo-${q.id}" class="btn btn-secondary">📷 Прикрепить фото</label>
+                    <input type="file" id="photo-${q.id}" class="checklist-photo" accept="image/*" style="display:none;" onchange="${onPhotoChange}">
+                    <span id="photo-filename-${q.id}" class="photo-filename">Фото не выбрано</span>
+                </div>
+            </div>` : '';
+
+        const defaultAnswer = ['Соответствует', 'Не соответствует'].includes(q.defaultValue) ? q.defaultValue : 'N/A';
+        
+        return `
+            <div class="criterion-card" data-question-id="${q.id}" data-answer="${defaultAnswer}">
+                <div class="criterion-header">
+                    <h3 class="criterion-title">${q.number}. ${q.criterion}</h3>
+                    <div class="assessment-buttons">
+                        <button class="assessment-btn btn-success ${defaultAnswer === 'Соответствует' ? 'selected' : ''}" onclick="selectAnswer(this, 'Соответствует')">✔️</button>
+                        <button class="assessment-btn btn-danger ${defaultAnswer === 'Не соответствует' ? 'selected' : ''}" onclick="selectAnswer(this, 'Не соответствует')">❌</button>
+                    </div>
+                    ${detailsToggleHTML}
+                </div>
+                ${hasDetails ? `<div class="details-content">${commentHTML}${photoHTML}</div>` : ''}
+            </div>`;
+    };
+
+    template.classes.forEach(cls => {
+        fillerContainer.innerHTML += `<h3>Класс ${cls.letter}: ${cls.name}</h3>`;
+        cls.questions?.forEach(q => fillerContainer.insertAdjacentHTML('beforeend', createQuestionCard(q)));
+        cls.subclasses?.forEach(subcls => {
+            fillerContainer.innerHTML += `<h4>Подкласс ${subcls.code}: ${subcls.name}</h4>`;
+            subcls.questions?.forEach(q => fillerContainer.insertAdjacentHTML('beforeend', createQuestionCard(q)));
+        });
+    });
+}
+
+// --- ВАЛИДАЦИЯ И СОХРАНЕНИЕ ОТЧЕТА ---
+async function validateAndSaveReport() {
+    if (!currentChecklistTemplate) return;
+
+    let isValid = true;
+    let firstInvalidCard = null;
+    document.querySelectorAll('.criterion-card.error-highlight').forEach(c => c.classList.remove('error-highlight'));
+
+    for (const card of document.querySelectorAll('#checklist-filler .criterion-card')) {
+        const answer = card.dataset.answer;
+        const photoInput = card.querySelector('.checklist-photo');
+        if (answer === 'Не соответствует' && photoInput && photoInput.files.length === 0) {
+            isValid = false;
+            card.classList.add('error-highlight');
+            if (!firstInvalidCard) firstInvalidCard = card;
+        }
+    }
+
+    if (!isValid) {
+        alert(`Пожалуйста, прикрепите фото для вопроса: "${firstInvalidCard.querySelector('.criterion-title').textContent.trim()}"`);
+        firstInvalidCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+    }
+
+    const reportData = JSON.parse(JSON.stringify(currentChecklistTemplate));
+    reportData.department = document.getElementById('departmentSelect').value;
+    reportData.completionDate = new Date().toISOString();
+
+    const populateAnswers = (questions) => {
+        if (!questions) return;
+        for (const question of questions) {
+            const card = document.querySelector(`.criterion-card[data-question-id="${question.id}"]`);
+            if (card) {
+                const userAnswer = card.dataset.answer;
+                const commentInput = card.querySelector('.checklist-comment');
+                const photoInput = card.querySelector('.checklist-photo');
+                question.userAnswer = userAnswer;
+                question.userComment = commentInput ? commentInput.value : null;
+                question.userPhoto = (photoInput?.files.length > 0) ? `FILE:${photoInput.files[0].name}` : null;
+                question.status = (userAnswer === 'N/A') ? "Не заполнено" : "Заполнено";
+            }
+        }
+    };
+    
+    reportData.classes.forEach(cls => {
+        populateAnswers(cls.questions);
+        cls.subclasses?.forEach(subcls => populateAnswers(subcls.questions));
+    });
+
+    const now = new Date();
+    const datePrefix = `${now.getDate().toString().padStart(2, '0')}${(now.getMonth() + 1).toString().padStart(2, '0')}${now.getFullYear()}`;
+    const departmentSanitized = reportData.department.replace(/\s+/g, '_');
+    const filename = `${datePrefix}_${departmentSanitized}.json`;
+
+    try {
+        const response = await fetch('/api/reports', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ filename, data: reportData })
+        });
+        if (!response.ok) throw await response.json();
+        alert(`Отчет '${filename}' успешно сохранен!`);
+        location.reload();
+    } catch (error) {
+        console.error('Ошибка при сохранении отчета:', error);
+        alert(`Не удалось сохранить отчет: ${error.detail || error.message}.`);
+    }
+}
+
+// --- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ИНТЕРФЕЙСА ---
+function toggleDetails(button) {
+    button.classList.toggle('active');
+    button.closest('.criterion-card').querySelector('.details-content').classList.toggle('show');
+}
+function selectAnswer(button, answer) {
+    const card = button.closest('.criterion-card');
+    card.dataset.answer = answer;
+    button.parentElement.querySelectorAll('.assessment-btn').forEach(btn => btn.classList.remove('selected'));
+    button.classList.add('selected');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Конструктор и Редактор Чек-листов</title>
+<!-- Подключаем общие стили -->
+<link rel="stylesheet" href="styles.css">
+</head>
+<body onload="initializeConstructorPage()">
+
+<header class="app-header">
+    <a href="/" class="logo">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#ffffff"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M9 20H4C3.44772 20 3 19.5523 3 19V5C3 4.44772 3.44772 4 4 4H14.5C14.7761 4 15 4.22386 15 4.5V9.5M9 20V14C9 13.4477 9.44772 13 10 13H14C14.5523 13 15 13.4477 15 14V20M9 20H15M19 16L19 12M19 12L17 14M19 12L21 14" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path> </g></svg>
+        <span>МИРАН | Культура Производства</span>
+    </a>
+    <nav>
+        <a href="/">Главная</a>
+        <a href="/checklist_filler.html">Заполнить отчет</a>
+        <a href="/constructor.html" class="active">Конструктор форм</a>
+        <a href="/reports.html">Архив отчетов</a>
+    </nav>
+</header>
+
+<main>
+  <h1>Конструктор и Редактор Чек-листов</h1>
+  
+  <section class="section-card">
+    <h2>Редактирование Существующего Шаблона</h2>
+    <div class="form-group">
+        <label for="formSelectForEdit">Выберите форму для редактирования</label>
+        <select id="formSelectForEdit"><option>Загрузка...</option></select>
+    </div>
+    <button class="btn btn-secondary" onclick="loadSelectedTemplateForEditing()">Загрузить шаблон</button>
+  </section>
+
+  <section class="section-card">
+    <h2>Создание или Редактирование Шаблона</h2>
+    <div class="form-group">
+      <label for="surveyTitle">Название опроса</label>
+      <input type="text" id="surveyTitle" placeholder="Ежедневная проверка чистоты цеха" oninput="generateFilename()">
+    </div>
+    <div class="form-group">
+        <label for="surveyFilename">Имя файла (без .json)</label>
+        <div style="display: flex; gap: 10px;">
+            <input type="text" id="surveyFilename" placeholder="ezhednevnaya_proverka_ceha">
+            <button class="btn btn-secondary" onclick="generateFilename()">⚙️</button>
+        </div>
+    </div>
+    
+    <div id="classesContainer"></div>
+    
+    <button class="btn btn-secondary" onclick="addClass()">➕ Добавить Класс</button>
+    <hr style="margin: 2rem 0;">
+    <button class="btn btn-primary" onclick="saveTemplateOnServer()">💾 Сохранить шаблон формы</button>
+  </section>
+
+  <section class="section-card">
+    <h2>Управление списком отделений</h2>
+    <div id="department-list-container"></div>
+    <div class="form-group" style="margin-top: 1rem;">
+        <label for="new-department-name">Добавить новое отделение</label>
+        <div style="display: flex; gap: 10px;">
+            <input type="text" id="new-department-name" placeholder="Название отделения">
+            <button class="btn btn-secondary" onclick="addDepartmentToList()">➕ Добавить</button>
+        </div>
+    </div>
+    <button class="btn btn-primary" onclick="saveDepartments()">💾 Сохранить список отделений</button>
+  </section>
+</main>
+
+<script>
+// Весь JavaScript остается без изменений, так как он не зависит от способа подключения стилей
+let currentDepartments = [];
+
+// --- ИНИЦИАЛИЗАЦИЯ СТРАНИЦЫ ---
+async function initializeConstructorPage() {
+    await loadFormListForEditing();
+    await loadDepartmentsForEditing();
+}
+
+// --- УПРАВЛЕНИЕ ШАБЛОНАМИ (ЗАГРУЗКА, СОХРАНЕНИЕ) ---
+async function loadFormListForEditing() {
+    try {
+        const response = await fetch('/api/templates');
+        if (!response.ok) throw new Error('Сетевой ответ был не в порядке');
+        const templates = await response.json(); 
+        const select = document.getElementById('formSelectForEdit');
+        select.innerHTML = '<option value="">-- Выберите шаблон для редактирования --</option>';
+        templates.forEach(template => {
+            const option = document.createElement('option');
+            option.value = template.filename; 
+            option.textContent = template.title; 
+            select.appendChild(option);
+        });
+    } catch (error) {
+        console.error("Не удалось загрузить список шаблонов:", error);
+        document.getElementById('formSelectForEdit').innerHTML = '<option>Ошибка загрузки списка</option>';
+    }
+}
+
+async function loadSelectedTemplateForEditing() {
+    const select = document.getElementById('formSelectForEdit');
+    const filename = select.value;
+    if (!filename) {
+        alert("Пожалуйста, выберите шаблон для загрузки.");
+        return;
+    }
+    try {
+        const response = await fetch(`/api/templates/${filename}`);
+        if (!response.ok) throw new Error('Template not found');
+        const templateData = await response.json();
+        document.getElementById('surveyTitle').value = templateData.title || '';
+        document.getElementById('surveyFilename').value = filename;
+        document.getElementById('classesContainer').innerHTML = '';
+        if (templateData.classes) {
+            templateData.classes.forEach(classData => addClass(classData));
+        }
+    } catch (error) {
+        console.error("Ошибка при загрузке шаблона:", error);
+        alert(`Не удалось загрузить шаблон: ${filename}`);
+    }
+}
+
+// --- ДИНАМИЧЕСКОЕ СОЗДАНИЕ ЭЛЕМЕНТОВ ФОРМЫ ---
+function addClass(data = null) {
+  const classesContainer = document.getElementById('classesContainer');
+  const classId = `class-${Date.now()}`;
+  const classHTML = `
+    <div class="nested-container class-item">
+      <div class="item-header">
+        <div class="item-header-title">
+            <h3>Класс</h3>
+            <div class="checkbox-group">
+                <input type="checkbox" class="include-in-score" id="class-score-${classId}" ${!data || data.includeInScore ? 'checked' : ''}>
+                <label for="class-score-${classId}">Учитывать в оценке</label>
+            </div>
+        </div>
+        <button class="btn-danger-subtle" onclick="this.closest('.class-item').remove()">Удалить класс</button>
+      </div>
+      <div class="form-group-inline">
+        <input type="text" placeholder="Буква класса (напр. A)" class="class-letter" value="${data?.letter || ''}">
+        <input type="text" placeholder="Название класса (напр. 'Безопасность')" class="class-name" value="${data?.name || ''}">
+      </div>
+      <div class="nested-container">
+        <h4>Вопросы этого класса:</h4>
+        <div class="questions-container"></div>
+      </div>
+      <div class="nested-container">
+        <h4>Подклассы:</h4>
+        <div class="subclasses-container"></div>
+      </div>
+      <div class="button-group">
+        <button class="btn btn-secondary" onclick="addQuestion(this)">➕ Добавить вопрос</button>
+        <button class="btn btn-secondary" onclick="addSubclass(this)">➕ Добавить подкласс</button>
+      </div>
+    </div>`;
+  classesContainer.insertAdjacentHTML('beforeend', classHTML);
+  if (data) {
+    const newClassEl = classesContainer.lastElementChild;
+    data.questions?.forEach(qData => addQuestion(newClassEl, qData));
+    data.subclasses?.forEach(scData => addSubclass(newClassEl, scData));
+  }
+}
+
+function addSubclass(buttonOrParent, data = null) {
+  const parent = buttonOrParent.closest('.class-item');
+  const subclassesContainer = parent.querySelector('.subclasses-container');
+  const subClassId = `subclass-${Date.now()}`;
+  const subclassHTML = `
+    <div class="nested-container subclass-item">
+      <div class="item-header">
+         <div class="item-header-title">
+            <h4>Подкласс</h4>
+            <div class="checkbox-group">
+                <input type="checkbox" class="include-in-score" id="subclass-score-${subClassId}" ${!data || data.includeInScore ? 'checked' : ''}>
+                <label for="subclass-score-${subClassId}">Учитывать в оценке</label>
+            </div>
+        </div>
+        <button class="btn-danger-subtle" onclick="this.closest('.subclass-item').remove()">Удалить подкласс</button>
+      </div>
+      <div class="form-group-inline">
+        <input type="text" placeholder="Код (напр. A1)" class="subclass-code" value="${data?.code || ''}">
+        <input type="text" placeholder="Название (напр. 'Средства защиты')" class="subclass-name" value="${data?.name || ''}">
+      </div>
+      <div class="questions-container"></div>
+      <button class="btn btn-secondary" style="margin-top:1rem;" onclick="addQuestion(this)">➕ Добавить вопрос</button>
+    </div>`;
+  subclassesContainer.insertAdjacentHTML('beforeend', subclassHTML);
+  if (data?.questions) {
+      const newSubclassEl = subclassesContainer.lastElementChild;
+      data.questions.forEach(qData => addQuestion(newSubclassEl, qData));
+  }
+}
+
+function addQuestion(buttonOrParent, data = null) {
+  const questionsContainer = buttonOrParent.closest('.class-item, .subclass-item').querySelector('.questions-container');
+  const newQuestionNumber = questionsContainer.querySelectorAll('.question-item').length + 1;
+  const questionId = `q-${Date.now()}`;
+  const questionHTML = `
+    <div class="nested-container question-item">
+        <div class="item-header">
+             <div class="item-header-title">
+                <h5>Вопрос</h5>
+                <div class="checkbox-group">
+                    <input type="checkbox" class="include-in-score" id="q-score-${questionId}" ${!data || data.includeInScore ? 'checked' : ''}>
+                    <label for="q-score-${questionId}">Учитывать в оценке</label>
+                </div>
+            </div>
+            <button class="btn-danger-subtle" onclick="this.closest('.question-item').remove()">Удалить</button>
+        </div>
+        <div class="form-group">
+            <label>Номер вопроса</label>
+            <input type="text" class="question-number" value="${data?.number || newQuestionNumber}" readonly>
+        </div>
+        <div class="form-group">
+            <label>Критерий (текст вопроса)</label>
+            <textarea class="question-criterion" rows="2" placeholder="Напр. 'Рабочее место убрано от посторонних предметов'">${data?.criterion || ''}</textarea>
+        </div>
+        <div class="form-group-inline">
+             <div class="form-group">
+                <label>Ответ по умолчанию</label>
+                <select class="question-default">
+                    <option value="N/A" ${data?.defaultValue === 'N/A' ? 'selected' : ''}>Неприменимо</option>
+                    <option value="Соответствует" ${data?.defaultValue === 'Соответствует' ? 'selected' : ''}>Соответствует</option>
+                    <option value="Не соответствует" ${data?.defaultValue === 'Не соответствует' ? 'selected' : ''}>Не соответствует</option>
+                </select>
+            </div>
+            <div class="checkbox-group" style="flex-grow: 2; justify-content: space-around;">
+                <span>
+                    <input type="checkbox" id="allow-gallery-${questionId}" class="question-allow-gallery" ${!data || data.allowGallery === undefined || data.allowGallery ? 'checked' : ''}>
+                    <label for="allow-gallery-${questionId}">Добавить галерею</label>
+                </span>
+                 <span>
+                    <input type="checkbox" id="allow-photo-${questionId}" class="question-allow-photo" ${!data || data.allowPhoto === undefined || data.allowPhoto ? 'checked' : ''}>
+                    <label for="allow-photo-${questionId}">Добавить фото</label>
+                </span>
+            </div>
+        </div>
+    </div>`;
+  questionsContainer.insertAdjacentHTML('beforeend', questionHTML);
+}
+
+// --- СБОРКА И СОХРАНЕНИЕ ШАБЛОНА ---
+async function saveTemplateOnServer() {
+    const filename = document.getElementById('surveyFilename').value.trim();
+    if (!filename) return alert("Пожалуйста, укажите имя файла для сохранения.");
+    const title = document.getElementById('surveyTitle').value.trim();
+    if (!title) return alert("Пожалуйста, укажите название опроса.");
+
+    const templateData = buildTemplateJson();
+    try {
+        const response = await fetch(`/api/templates/${filename}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(templateData)
+        });
+        if (!response.ok) throw await response.json();
+        alert(`Шаблон "${title}" успешно сохранен!`);
+        await loadFormListForEditing();
+    } catch (error) {
+        console.error("Ошибка сохранения шаблона:", error);
+        alert('Ошибка при сохранении шаблона: ' + (error.detail || error.message));
+    }
+}
+
+function buildTemplateJson() {
+    const surveyTemplate = {
+        title: document.getElementById('surveyTitle').value,
+        classes: []
+    };
+    const collectQuestions = (container) => {
+        const questions = [];
+        container.querySelectorAll(':scope > .question-item').forEach(qEl => {
+            questions.push({
+                id: `q-${qEl.querySelector('.question-number').value}-${Math.random().toString(16).slice(2)}`,
+                number: qEl.querySelector('.question-number').value,
+                criterion: qEl.querySelector('.question-criterion').value,
+                defaultValue: qEl.querySelector('.question-default').value,
+                allowGallery: qEl.querySelector('.question-allow-gallery').checked,
+                allowPhoto: qEl.querySelector('.question-allow-photo').checked,
+                includeInScore: qEl.querySelector('.include-in-score').checked,
+            });
+        });
+        return questions;
+    };
+    document.querySelectorAll('.class-item').forEach(classEl => {
+        const classObj = {
+            letter: classEl.querySelector('.class-letter').value,
+            name: classEl.querySelector('.class-name').value,
+            includeInScore: classEl.querySelector(':scope > .item-header .include-in-score').checked,
+            questions: collectQuestions(classEl.querySelector(':scope > .questions-container')),
+            subclasses: []
+        };
+        classEl.querySelectorAll(':scope > .subclasses-container > .subclass-item').forEach(subclassEl => {
+            classObj.subclasses.push({
+                code: subclassEl.querySelector('.subclass-code').value,
+                name: subclassEl.querySelector('.subclass-name').value,
+                includeInScore: subclassEl.querySelector('.include-in-score').checked,
+                questions: collectQuestions(subclassEl.querySelector('.questions-container'))
+            });
+        });
+        surveyTemplate.classes.push(classObj);
+    });
+    return surveyTemplate;
+}
+
+// --- УПРАВЛЕНИЕ СПИСКОМ ОТДЕЛЕНИЙ ---
+async function loadDepartmentsForEditing() {
+    try {
+        const response = await fetch('/api/departments');
+        if (!response.ok) throw new Error('Network error');
+        currentDepartments = await response.json();
+        renderDepartmentList();
+    } catch (error) {
+        console.error("Не удалось загрузить список отделений:", error);
+        document.getElementById('department-list-container').innerHTML = '<p style="color:red;">Не удалось загрузить</p>';
+    }
+}
+function renderDepartmentList() {
+    const container = document.getElementById('department-list-container');
+    container.innerHTML = currentDepartments.length === 0 ? '<p>Список пуст.</p>' : '';
+    currentDepartments.forEach((dept, index) => {
+        const item = document.createElement('div');
+        item.className = 'department-list-item';
+        item.innerHTML = `<span>${dept}</span><button class="btn-danger-subtle" onclick="deleteDepartment(${index})">❌ Удалить</button>`;
+        container.appendChild(item);
+    });
+}
+function addDepartmentToList() {
+    const input = document.getElementById('new-department-name');
+    const newDeptName = input.value.trim();
+    if (newDeptName) {
+        if (currentDepartments.includes(newDeptName)) return alert('Такое отделение уже существует.');
+        currentDepartments.push(newDeptName);
+        renderDepartmentList();
+        input.value = '';
+    }
+}
+function deleteDepartment(index) {
+    if (confirm(`Вы уверены, что хотите удалить "${currentDepartments[index]}"?`)) {
+        currentDepartments.splice(index, 1);
+        renderDepartmentList();
+    }
+}
+async function saveDepartments() {
+    try {
+        const response = await fetch('/api/departments', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(currentDepartments)
+        });
+        if (!response.ok) throw new Error('Server error');
+        alert('Список отделений успешно сохранен!');
+    } catch (error) {
+        console.error("Ошибка сохранения списка отделений:", error);
+        alert('Ошибка при сохранении списка.');
+    }
+}
+
+// --- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ---
+function generateFilename() {
+    const title = document.getElementById('surveyTitle').value;
+    const translit = { 'а':'a','б':'b','в':'v','г':'g','д':'d','е':'e','ё':'e','ж':'zh','з':'z','и':'i','й':'y','к':'k','л':'l','м':'m','н':'n','о':'o','п':'p','р':'r','с':'s','т':'t','у':'u','ф':'f','х':'h','ц':'c','ч':'ch','ш':'sh','щ':'sch','ъ':'','ы':'y','ь':'','э':'e','ю':'yu','я':'ya',' ':'_','-':'_','/':'_','\\':'_' };
+    let filename = title.toLowerCase().split('').map(char => translit[char] || char).join('');
+    filename = filename.replace(/[^a-z0-9_]/g, '');
+    document.getElementById('surveyFilename').value = filename;
+}
+</script>
+</body>
+</html>

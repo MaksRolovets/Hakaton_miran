@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="miran-auth-container">
+  <h2>Регистрация</h2>
+  <form action="/register" method="post">
+    <label>Имя</label>
+    <input type="text" name="username" required>
+
+    <label>Email</label>
+    <input type="email" name="email" required>
+
+    <label>Пароль</label>
+    <input type="password" name="password" required>
+
+    <button type="submit" class="miran-btn miran-btn-primary">Создать аккаунт</button>
+  </form>
+  <p class="miran-form-footer">Уже есть аккаунт? <a href="/login">Войти</a></p>
+</div>
+{% endblock %}
